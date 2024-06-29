@@ -1,6 +1,6 @@
 # weather app
 
-* A new Flutter project to consult a weather api and provide its information.
+* A new Flutter project to consult a weather api and provide its informations.
 
 * There are two pages, Login and Home.
 
