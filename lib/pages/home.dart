@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:weather_app/services/authentication.dart';
 import 'package:weather_app/components/weatherCard.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,7 @@ class Home extends StatefulWidget {
 
 class _HomePageState extends State<Home> {
   String _currentLocation = '';
+  String _city = 'Loading...';
   List<dynamic> _weatherList = [];
   bool _isAuthenticated = false;
   bool _isLoading = true;
@@ -23,6 +25,28 @@ class _HomePageState extends State<Home> {
     super.initState();
     _initLocation();
     _checkAuthentication();
+  }
+
+  Future<void> _getCityName(double latitude, double longitude) async {
+    try {
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(latitude, longitude);
+      if (placemarks != null && placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        setState(() {
+          _city = place.locality ?? 'Unknown';
+        });
+      } else {
+        setState(() {
+          _city = 'City not found';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _city = _currentLocation;
+      });
+      print('Error: $e');
+    }
   }
 
   Future<void> _checkAuthentication() async {
@@ -52,6 +76,8 @@ class _HomePageState extends State<Home> {
       setState(() {
         _currentLocation = '${position.latitude}, ${position.longitude}';
       });
+      await _getCityName(position.latitude, position.longitude);
+
       await _fetchWeather(position.latitude, position.longitude);
     } catch (e) {
       setState(() {
@@ -99,7 +125,7 @@ class _HomePageState extends State<Home> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('Weather App - $_currentLocation'),
+        title: Text('Weather App - $_city'),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
